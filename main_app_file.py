@@ -155,6 +155,7 @@ class MainWindow(QWidget):
         button_conn = QPushButton('Подключиться')
         button_disconn = QPushButton('Отключиться')
         button_create = QPushButton('Сбросить и создать БД (CREATE)')
+        button_create.setDisabled(True)
 
         # добавление кнопок в сетку
         newdb_grid_buttons.addWidget(button_conn, 0, 0)
@@ -165,7 +166,9 @@ class MainWindow(QWidget):
         w_layout.addSpacing(30) # пробел между кнопками создания таблицы и работы с таблицей
 
         button_adddata = QPushButton('Добавить данные')
+        button_adddata.setDisabled(True)
         button_showdb = QPushButton('Вывести данные')
+        button_showdb.setDisabled(True)
         curdb_grid_buttons = QGridLayout() # сетка-макет кнопок для работы с нынешней бд
         curdb_grid_buttons.addWidget(button_adddata, 0, 0)
         curdb_grid_buttons.addWidget(button_showdb, 1, 0)
