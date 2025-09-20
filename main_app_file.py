@@ -17,7 +17,6 @@ class AddDataWindow(QWidget):
 
         empl_form = QFormLayout()  # макет для блока ввода данных для таблицы Сотрудники
         # текстовые поля для блока ввода данных
-        empl_lineedit_id = QLineEdit()
         empl_lineedit_fullname = QLineEdit()
         empl_lineedit_age = QLineEdit()
         empl_lineedit_salary = QLineEdit()
@@ -28,7 +27,6 @@ class AddDataWindow(QWidget):
         empl_lineedit_skills = QLineEdit()
 
         # добавление полей ввода в макет
-        empl_form.addRow("ID сотрудника:", empl_lineedit_id)
         empl_form.addRow("Полное имя:", empl_lineedit_fullname)
         empl_form.addRow("Возраст:", empl_lineedit_age)
         empl_form.addRow("Зарплата:", empl_lineedit_salary)
@@ -55,7 +53,6 @@ class AddDataWindow(QWidget):
 
         task_form = QFormLayout()
 
-        task_lineedit_id = QLineEdit()
         task_lineedit_name = QLineEdit()
         task_lineedit_description = QLineEdit()
         task_lineedit_id_employ = QLineEdit()
@@ -63,7 +60,6 @@ class AddDataWindow(QWidget):
         task_combobox_status = QComboBox()
         task_combobox_status.addItem('Выдана'); task_combobox_status.addItem('В работе'); task_combobox_status.addItem('Завершена')
 
-        task_form.addRow("ID задачи:", task_lineedit_id)
         task_form.addRow("Название задачи:", task_lineedit_name)
         task_form.addRow("Описание задачи:", task_lineedit_description)
         task_form.addRow("ID работника:", task_lineedit_id_employ)
@@ -88,7 +84,6 @@ class AddDataWindow(QWidget):
 
         projects_form = QFormLayout()
 
-        projects_lineedit_id = QLineEdit()
         projects_lineedit_name = QLineEdit()
         projects_lineedit_deadline = QLineEdit()
         projects_lineedit_prize = QLineEdit()
@@ -96,7 +91,6 @@ class AddDataWindow(QWidget):
         projects_combobox_finished = QComboBox()
         projects_combobox_finished.addItem('1'); projects_combobox_finished.addItem('0')
 
-        projects_form.addRow("ID проекта:", projects_lineedit_id)
         projects_form.addRow("Название проекты:", projects_lineedit_name)
         projects_form.addRow("Дата дедлайна:", projects_lineedit_deadline)
         projects_form.addRow("Премия за проект:", projects_lineedit_prize)
@@ -113,32 +107,6 @@ class AddDataWindow(QWidget):
         projects_box.setLayout(projects_layout)
 
         tab.insertTab(2, projects_box, 'Проекты')
-
-
-
-
-        # protas — project + task
-        protas_form = QFormLayout()
-
-        protas_lineedit_id_protas = QLineEdit()
-        protas_lineedit_id_project = QLineEdit()
-        protas_lineedit_id_task = QLineEdit()
-
-        protas_form.addRow("ID связи", protas_lineedit_id_protas)
-        protas_form.addRow("ID проекта:", protas_lineedit_id_project)
-        protas_form.addRow("ID задачи:", protas_lineedit_id_task)
-
-        protas_add_button = QPushButton('Добавить данные')
-
-        protas_layout = QVBoxLayout()
-        protas_layout.addLayout(protas_form)
-        protas_layout.addWidget(protas_add_button)
-        protas_layout.addStretch()
-
-        protas_box = QGroupBox("Данные новой связи проекта с задачей")
-        protas_box.setLayout(protas_layout)
-
-        tab.insertTab(3, protas_box, 'Проекты/задачи')
 
         # -------------------------------
         # Конец создания вкладок
