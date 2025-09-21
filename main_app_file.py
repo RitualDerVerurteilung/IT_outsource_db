@@ -1,10 +1,10 @@
 import sys
 
-from PySide6.QtCore import QDate, Qt
+from PySide6.QtCore import QDate
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QGroupBox, QFormLayout, \
-    QLineEdit, QGridLayout, QTabWidget, QComboBox, QDialog, QCheckBox, QDateEdit, QSpinBox, QTableWidget, QHeaderView, \
-    QTableWidgetItem, QAbstractItemView
+    QLineEdit, QGridLayout, QTabWidget, QComboBox, QDialog, QCheckBox, QDateEdit, QSpinBox, QTableWidget, \
+    QTableWidgetItem, QAbstractItemView, QTextEdit
 
 
 # -------------------------------
@@ -211,6 +211,7 @@ class ShowDataBaseWindow(QDialog):
         self.setLayout(layout)
 
 
+
 # -------------------------------
 # Окно Добавления данных в БД
 # -------------------------------
@@ -269,9 +270,11 @@ class MainWindow(QWidget):
         curdb_grid_buttons.addWidget(button_showdb, 1, 0)
         w_layout.addLayout(curdb_grid_buttons) # добавление сетки кнопок в общий макет
 
-
-
-        w_layout.addStretch()  # объекты прилипают друг к другу, поэтому блок подключения не растягивается при расширении окна
+        log = QTextEdit()
+        log.setReadOnly(True)
+        log.setDocumentTitle('IT Outsource DB')
+        w_layout.addWidget(log)
+        # w_layout.addStretch()  # объекты прилипают друг к другу, поэтому блок подключения не растягивается при расширении окна. Из-за виджета логирования функция стала бесполезна, но оставил под комментарием на всякий случай каких-либо проблем
         self.setLayout(w_layout) # установка общего макета
 
     def addData(self):
@@ -281,6 +284,7 @@ class MainWindow(QWidget):
     def showDataBase(self):
         dlg = ShowDataBaseWindow()
         dlg.exec()
+
 
 
 app = QApplication(sys.argv)
