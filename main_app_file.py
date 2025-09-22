@@ -1,14 +1,4 @@
 import sys
-from dataclasses import dataclass
-from multiprocessing.managers import Array
-from typing import Optional, List, Dict, Any
-from datetime import date
-import faulthandler
-from xmlrpc.client import Boolean
-
-from Scripts.pywin32_testall import project_root
-
-faulthandler.enable()
 
 from PySide6.QtCore import QDate, Qt
 from PySide6.QtGui import QStandardItem
@@ -16,108 +6,6 @@ from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, Q
     QLineEdit, QGridLayout, QTabWidget, QComboBox, QDialog, QCheckBox, QDateEdit, QSpinBox, QTableWidget, QHeaderView, \
     QTableWidgetItem, QAbstractItemView
 
-from sqlalchemy import (
-    create_engine, MetaData, Table, Column, Integer, String, Date,
-    ForeignKey, UniqueConstraint, CheckConstraint, select, insert, delete, ForeignKeyConstraint, Boolean
-)
-from sqlalchemy.engine import Engine
-from sqlalchemy.engine.url import URL
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.dialects.postgresql import ARRAY
-
-
-@dataclass
-class PgConfig:
-    host: str = "localhost"
-    port: int = 5432
-    dbname: str = "outsource"
-    user: str = "postgres"
-    password: str = "root"
-    sslmode: str = "prefer"
-    connect_timeout: int = 5
-
-
-def make_engine(cfg: PgConfig) -> Engine:
-    query = {
-        "sslmode": cfg.sslmode,
-        "application_name": "QtEduDemo",
-        "connect_timeout": str(cfg.connect_timeout),
-    }
-
-    url = URL.create(
-        drivername="postgresql+psycopg2",
-        username=cfg.user,
-        password=cfg.password,
-        host=cfg.host,
-        port=cfg.port,
-        database=cfg.dbname,
-        query=query,
-    )
-
-    engine = create_engine(url, future=True, pool_pre_ping=True)
-    # sanity ping
-    with engine.connect() as conn:
-        conn.exec_driver_sql("SELECT 1")
-    return engine
-
-def build_metadata() -> (MetaData, Dict[str, Table]):
-    md = MetaData()
-
-    employee = Table(
-        "employee", md,
-        Column("employee_id", Integer, primary_key=True, autoincrement=True),
-        Column("full_name", String(300), nullable=False),
-        Column("age", Integer, nullable=False),
-        Column("salary", Integer, nullable=False),
-        Column("duty", String(10), nullable=False),
-        Column("skills", ARRAY(String)),
-        CheckConstraint("age > 0", name="employee_age_check"),
-        CheckConstraint("salary > 0", name="employee_salary_check"),
-        CheckConstraint("duty IN ('Frontend', 'Backend', 'DevOps', 'HR', 'PM', 'CEO')"),
-    )
-
-    task = Table(
-        "task", md,
-        Column("task_id", Integer, primary_key=True, autoincrement=True),
-        Column("employee_id", Integer, nullable=False),
-        Column("name", String(300), nullable=False),
-        Column("description", String),
-        Column("deadline", Date),
-        Column("status", String(10), nullable=False),
-        CheckConstraint("status IN ('Новая', 'В процессе', 'Можно проверять', 'Завершена')"),
-        ForeignKeyConstraint(["employee_id"], ["employee.employee_id"], name="fk_employee"),
-    )
-
-    project = Table(
-        "project", md,
-        Column("project_id", Integer, primary_key=True, autoincrement=True),
-        Column("name", String(300), nullable=False),
-        Column("deadline", Date),
-        Column("prize", Integer, nullable=False),
-        Column("customer", String(500)),
-        Column("finished", Boolean, nullable=False),
-        CheckConstraint("prize > 0", name="project_prize_check")
-    )
-
-    project_task = Table(
-        "project_task", md,
-        Column("project_task_id", Integer, primary_key=True, autoincrement=True),
-        Column("project_id", Integer, nullable=False),
-        Column("task_id", Integer, nullable=False),
-        ForeignKeyConstraint(["project_id"], ["project.project_id"], name="fk_project"),
-        ForeignKeyConstraint(["task_id"], ["task.task_id"], name="fk_task"),
-    )
-
-    return md, {"employee": employee, "task": task, "project": project, "project_task": project_task}
-
-def drop_and_create_schema_sa(engine: Engine, md: MetaData) -> bool:
-    try:
-        md.drop_all(engine)
-        md.create_all(engine)
-        return True
-    except SQLAlchemyError as e:
-        print("SA schema error:", e)
-        return False
 
 # -------------------------------
 # Окно Добавления данных в БД
@@ -332,124 +220,59 @@ class MainWindow(QWidget):
         self.setWindowTitle('IT Outsource DB')
         self.setGeometry(200, 200, 1000, 500)
 
-        self.engine: Optional[Engine] = None
-        self.md: Optional[MetaData] = None
-        self.tables: Optional[Dict[str, Table]] = None
-
-        self.employee_tab: Optional[EmployeeTab] = None
-        self.task_tab: Optional[TaskTab] = None
-        self.project_tab: Optional[ProjectTab] = None
-
-        self.conn_form = QFormLayout() # макет для блока подключения
+        conn_form = QFormLayout() # макет для блока подключения
         # текстовые поля для блока подключения
-        self.lineedit_host = QLineEdit("localhost")
-        self.lineedit_port = QLineEdit("5432")
-        self.lineedit_dbname = QLineEdit("outsource")
-        self.lineedit_user = QLineEdit("postgres")
-        self.lineedit_password = QLineEdit(echoMode=QLineEdit.EchoMode.Password)
-        self.lineedit_sslmode = QLineEdit("prefer")
+        lineedit_host = QLineEdit("localhost")
+        lineedit_port = QLineEdit("5432")
+        lineedit_dbname = QLineEdit("outsource")
+        lineedit_user = QLineEdit("postgres")
+        lineedit_password = QLineEdit(echoMode=QLineEdit.EchoMode.Password)
+        lineedit_sslmode = QLineEdit("prefer")
 
         # добавление полей ввода в макет
-        self.conn_form.addRow("Host:", self.lineedit_host)
-        self.conn_form.addRow("Port:", self.lineedit_port)
-        self.conn_form.addRow("DB name:", self.lineedit_dbname)
-        self.conn_form.addRow("User:", self.lineedit_user)
-        self.conn_form.addRow("Password:", self.lineedit_password)
-        self.conn_form.addRow("sslmode:", self.lineedit_sslmode)
+        conn_form.addRow("Host:", lineedit_host)
+        conn_form.addRow("Port:", lineedit_port)
+        conn_form.addRow("DB name:", lineedit_dbname)
+        conn_form.addRow("User:", lineedit_user)
+        conn_form.addRow("Password:", lineedit_password)
+        conn_form.addRow("sslmode:", lineedit_sslmode)
 
         # создание и именование блока подключение
-        self.conn_box = QGroupBox("Параметры подключения (SQLAlchemy)")
-        self.conn_box.setLayout(self.conn_form) # установка макета в блок
+        conn_box = QGroupBox("Параметры подключения (SQLAlchemy)")
+        conn_box.setLayout(conn_form) # установка макета в блок
 
-        self.w_layout = QVBoxLayout() # общий макет всего окна
-        self.w_layout.addWidget(self.conn_box) # добавление блока подключения в общий макет
+        w_layout = QVBoxLayout() # общий макет всего окна
+        w_layout.addWidget(conn_box) # добавление блока подключения в общий макет
 
-        self.newdb_grid_buttons = QGridLayout() # сетка-макет кнопок для работы с подключением и созданием бд
-        self.button_conn = QPushButton('Подключиться')
-        self.button_conn.clicked.connect(self.do_connect)
-        self.button_disconn = QPushButton('Отключиться')
-        self.button_disconn.clicked.connect(self.do_disconnect)
-        self.button_disconn.setDisabled(True)
-        self.button_create = QPushButton('Сбросить и создать БД (CREATE)')
-        self.button_create.clicked.connect(self.reset_db)
-        self.button_create.setDisabled(True)
+        newdb_grid_buttons = QGridLayout() # сетка-макет кнопок для работы с подключением и созданием бд
+        button_conn = QPushButton('Подключиться')
+        button_disconn = QPushButton('Отключиться')
+        button_disconn.setDisabled(True)
+        button_create = QPushButton('Сбросить и создать БД (CREATE)')
+        button_create.setDisabled(True)
 
         # добавление кнопок в сетку
-        self.newdb_grid_buttons.addWidget(self.button_conn, 0, 0)
-        self.newdb_grid_buttons.addWidget(self.button_disconn, 0, 1)
-        self.newdb_grid_buttons.addWidget(self.button_create, 1, 0, 1, 2)
-        self.w_layout.addLayout(self.newdb_grid_buttons) # добавление сетки кнопок в общий макет
+        newdb_grid_buttons.addWidget(button_conn, 0, 0)
+        newdb_grid_buttons.addWidget(button_disconn, 0, 1)
+        newdb_grid_buttons.addWidget(button_create, 1, 0, 1, 2)
+        w_layout.addLayout(newdb_grid_buttons) # добавление сетки кнопок в общий макет
 
-        self.w_layout.addSpacing(30) # пробел между кнопками создания таблицы и работы с таблицей
+        w_layout.addSpacing(30) # пробел между кнопками создания таблицы и работы с таблицей
 
-        self.button_adddata = QPushButton('Добавить данные')
-        self.button_adddata.setDisabled(True)
-        self.button_showdb = QPushButton('Вывести данные')
-        self.button_showdb.setDisabled(True)
-        self.button_adddata.clicked.connect(self.addData)
-        self.button_showdb.clicked.connect(self.showDataBase)
+        button_adddata = QPushButton('Добавить данные')
+        button_showdb = QPushButton('Вывести данные')
+        button_adddata.clicked.connect(self.addData)
+        button_showdb.clicked.connect(self.showDataBase)
 
-        self.curdb_grid_buttons = QGridLayout() # сетка-макет кнопок для работы с нынешней бд
-        self.curdb_grid_buttons.addWidget(self.button_adddata, 0, 0)
-        self.curdb_grid_buttons.addWidget(self.button_showdb, 1, 0)
-        self.w_layout.addLayout(self.curdb_grid_buttons) # добавление сетки кнопок в общий макет
+        curdb_grid_buttons = QGridLayout() # сетка-макет кнопок для работы с нынешней бд
+        curdb_grid_buttons.addWidget(button_adddata, 0, 0)
+        curdb_grid_buttons.addWidget(button_showdb, 1, 0)
+        w_layout.addLayout(curdb_grid_buttons) # добавление сетки кнопок в общий макет
 
 
 
-        self.w_layout.addStretch()  # объекты прилипают друг к другу, поэтому блок подключения не растягивается при расширении окна
-        self.setLayout(self.w_layout) # установка общего макета
-
-    def current_cfg(self) -> PgConfig:
-        try:
-            port = int(self.lineedit_port.text().strip())
-        except ValueError:
-            port = 5432
-        return PgConfig(
-            host=self.lineedit_host.text().strip() or "localhost",
-            port=port,
-            dbname=self.lineedit_dbname.text().strip() or "outsource",
-            user=self.lineedit_user.text().strip() or "postgres",
-            password=self.lineedit_password.text(),
-            sslmode=self.lineedit_sslmode.text().strip() or "prefer",
-        )
-
-    def do_connect(self):
-        main = self.window()  # <-- было parent().parent()
-        # если уже подключены — просим отключиться
-        if getattr(main, "engine", None) is not None:
-            #self.log.append("Уже подключено. Нажмите «Отключиться» для переподключения.")
-            return
-        cfg = self.current_cfg()
-        try:
-            engine = make_engine(cfg)
-            md, tables = build_metadata()
-            main.attach_engine(engine, md, tables)
-            #self.log.append(
-            #    f"Успешное подключение: psycopg2 → {cfg.host}:{cfg.port}/{cfg.dbname} (user={cfg.user})"
-            #)
-            self.button_adddata.setEnabled(True)
-            self.button_showdb.setEnabled(True)
-            self.button_conn.setEnabled(False)
-            self.button_create.setEnabled(True)
-            self.button_disconn.setEnabled(True)
-        except SQLAlchemyError as e:
-            self.log.append(f"Ошибка подключения: {e}")
-
-    def do_disconnect(self):
-        QApplication.processEvents()
-        if self.engine is not None:
-            self.engine.dispose()
-        self.engine = None;
-        self.md = None;
-        self.tables = None
-
-        # кнопки в состояние "нет подключения"
-        self.button_adddata.setEnabled(False)
-        self.button_showdb.setEnabled(False)
-        self.button_conn.setEnabled(True)
-        self.button_create.setEnabled(False)
-        self.button_disconn.setEnabled(False)
-        #self.log.append("Соединение закрыто.")
+        w_layout.addStretch()  # объекты прилипают друг к другу, поэтому блок подключения не растягивается при расширении окна
+        self.setLayout(w_layout) # установка общего макета
 
     def addData(self):
         dlg = AddDataWindow()
@@ -458,46 +281,6 @@ class MainWindow(QWidget):
     def showDataBase(self):
         dlg = ShowDataBaseWindow()
         dlg.exec()
-
-    def attach_engine(self, engine: Engine, md: MetaData, tables: Dict[str, Table]):
-        self.engine = engine
-        self.md = md
-        self.tables = tables
-
-    def ensure_data_tabs(self):
-        if self.engine is None or self.tables is None:
-            return
-        if self.employee_tab is None:
-            self.employee_tab = EmployeeTab(self.engine, self.tables, self.tabs)
-            self.tabs.addTab(self.employee_tab, "Employees")
-        if self.task_tab is None:
-            self.task_tab = TaskTab(self.engine, self.tables, self.tabs)
-            self.tabs.addTab(self.task_tab, "Tasks")
-        if self.project_tab is None:
-            self.project_tab = ProjectTab(self.engine, self.tables, self.tabs)
-            self.tabs.addTab(self.project_tab, "Projects")
-        self.refresh_all_models()
-
-    def reset_db(self):
-        main = self.window()  # <-- было parent().parent()
-        if getattr(main, "engine", None) is None:
-            QMessageBox.warning(self, "Схема", "Нет подключения к БД.")
-            return
-        if drop_and_create_schema_sa(main.engine, main.md):
-            #self.log.append("Схема БД создана: students, courses, enrollments.")
-            #main.refresh_all_models()
-            #main.refresh_all_models()
-            pass
-        else:
-            QMessageBox.critical(self, "Схема", "Ошибка при создании схемы. См. консоль/лог.")
-
-    def refresh_all_models(self):
-        if self.employee_tab:
-            self.employee_tab.model.refresh()
-        if self.task_tab:
-            self.task_tab.model.refresh()
-        if self.project_tab:
-            self.project_tab.model.refresh()
 
 
 app = QApplication(sys.argv)
