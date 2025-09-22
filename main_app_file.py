@@ -10,9 +10,9 @@ from Scripts.pywin32_testall import project_root
 
 faulthandler.enable()
 
-from PySide6.QtCore import QDate, Qt
+from PySide6.QtCore import QDate, Qt, QAbstractTableModel, QModelIndex
 from PySide6.QtGui import QStandardItem
-from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QGroupBox, QFormLayout, \
+from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QGroupBox, QFormLayout, QMessageBox, \
     QLineEdit, QGridLayout, QTabWidget, QComboBox, QDialog, QCheckBox, QDateEdit, QSpinBox, QTableWidget, QHeaderView, \
     QTableWidgetItem, QAbstractItemView
 
@@ -78,7 +78,7 @@ def build_metadata() -> (MetaData, Dict[str, Table]):
         Column("skills", ARRAY(String)),
         CheckConstraint("age > 0", name="employee_age_check"),
         CheckConstraint("salary > 0", name="employee_salary_check"),
-        CheckConstraint("duty IN ('Frontend', 'Backend', 'DevOps', 'HR', 'PM', 'CEO')"),
+        CheckConstraint("duty IN ('Frontend', 'Backend', 'DevOps', 'Teamlead', 'HR', 'PM', 'CEO')"),
     )
 
     task = Table(
@@ -127,131 +127,255 @@ def drop_and_create_schema_sa(engine: Engine, md: MetaData) -> bool:
 
 
 # -------------------------------
+# QAbstractTableModel для SQLAlchemy
+# -------------------------------
+class SATableModel(QAbstractTableModel):
+    """Универсальная модель для QTableView (SQLAlchemy)."""
+    def __init__(self, engine: Engine, table: Table, parent=None):
+        super().__init__(parent)
+        self.engine = engine
+        self.table = table
+        self.columns: List[str] = [c.name for c in self.table.columns]
+        self.pk_col = list(self.table.primary_key.columns)[0]
+        self._rows: List[Dict[str, Any]] = []
+        self.refresh()
+
+    def refresh(self):
+        self.beginResetModel()
+        try:
+            with self.engine.connect() as conn:
+                res = conn.execute(select(self.table).order_by(self.pk_col.asc()))
+                self._rows = [dict(r._mapping) for r in res]
+        finally:
+            self.endResetModel()
+
+    def rowCount(self, parent=QModelIndex()) -> int:
+        return 0 if parent.isValid() else len(self._rows)
+
+    def columnCount(self, parent=QModelIndex()) -> int:
+        return 0 if parent.isValid() else len(self.columns)
+
+    def data(self, index: QModelIndex, role=Qt.DisplayRole):
+        if not index.isValid() or role not in (Qt.DisplayRole, Qt.EditRole):
+            return None
+        row = self._rows[index.row()]
+        col_name = self.columns[index.column()]
+        val = row.get(col_name)
+        return "" if val is None else str(val)
+
+    def headerData(self, section: int, orientation: Qt.Orientation, role=Qt.DisplayRole):
+        if role != Qt.DisplayRole:
+            return None
+        return self.columns[section] if orientation == Qt.Horizontal else section + 1
+
+    def pk_value_at(self, row: int):
+        return self._rows[row].get(self.pk_col.name) if 0 <= row < len(self._rows) else None
+
+# -------------------------------
 # Окно Добавления данных в БД
 # -------------------------------
 class AddDataWindow(QDialog):
-    def __init__(self):
+    def __init__(self, engine: Engine, tables: Dict[str, Table]):
         super().__init__()
         self.setWindowTitle('Data Input')
         self.setGeometry(300, 300, 600, 220)
+        self.engine = engine
+        self.t = tables
+        self.modelEmployee = SATableModel(engine, self.t["employee"], self)
+        self.modelTask = SATableModel(engine, self.t["task"], self)
+        self.modelProject = SATableModel(engine, self.t["project"], self)
 
-        tab = QTabWidget()
+        self.tab = QTabWidget()
 
-        empl_form = QFormLayout()  # макет для блока ввода данных для таблицы Сотрудники
+        self.empl_form = QFormLayout()  # макет для блока ввода данных для таблицы Сотрудники
         # текстовые и числовые поля для блока ввода данных
-        empl_lineedit_fullname = QLineEdit()
-        empl_spinbox_age = QSpinBox()
-        empl_spinbox_age.setRange(0, 200)
-        empl_spinbox_salary = QSpinBox()
-        empl_spinbox_salary.setRange(0, 2147483647)
-        empl_spinbox_salary.setSuffix(" ₽")
-        empl_combobox_duty = QComboBox()
-        empl_combobox_duty.addItem('front'); empl_combobox_duty.addItem('back'); empl_combobox_duty.addItem('devops')
-        empl_combobox_duty.addItem('teamlead'); empl_combobox_duty.addItem('HR'); empl_combobox_duty.addItem('PM')
-        empl_combobox_duty.addItem('CEO')
-        empl_lineedit_skills = QLineEdit()
+        self.empl_lineedit_fullname = QLineEdit()
+        self.empl_spinbox_age = QSpinBox()
+        self.empl_spinbox_age.setRange(0, 200)
+        self.empl_spinbox_salary = QSpinBox()
+        self.empl_spinbox_salary.setRange(0, 2147483647)
+        self.empl_spinbox_salary.setSuffix(" ₽")
+        self.empl_combobox_duty = QComboBox()
+        self.empl_combobox_duty.addItem('Frontend'); self.empl_combobox_duty.addItem('Backend'); self.empl_combobox_duty.addItem('Devops')
+        self.empl_combobox_duty.addItem('Teamlead'); self.empl_combobox_duty.addItem('HR'); self.empl_combobox_duty.addItem('PM')
+        self.empl_combobox_duty.addItem('CEO')
+        self.empl_lineedit_skills = QLineEdit()
 
         # добавление полей ввода в макет
-        empl_form.addRow("Полное имя:", empl_lineedit_fullname)
-        empl_form.addRow("Возраст:", empl_spinbox_age)
-        empl_form.addRow("Зарплата:", empl_spinbox_salary)
-        empl_form.addRow("Должность:", empl_combobox_duty)
-        empl_form.addRow("Умения:", empl_lineedit_skills)
+        self.empl_form.addRow("Полное имя:", self.empl_lineedit_fullname)
+        self.empl_form.addRow("Возраст:", self.empl_spinbox_age)
+        self.empl_form.addRow("Зарплата:", self.empl_spinbox_salary)
+        self.empl_form.addRow("Должность:", self.empl_combobox_duty)
+        self.empl_form.addRow("Умения:", self.empl_lineedit_skills)
 
-        empl_add_button = QPushButton('Добавить данные') # кнопка добавления данных
-
+        self.empl_add_button = QPushButton('Добавить данные') # кнопка добавления данных
+        self.empl_add_button.clicked.connect(self.add_employee)
         # Создание макета всего внутреннего содержимого блока ввода данных (сами поля данных и кнопка)
-        empl_layout = QVBoxLayout()
-        empl_layout.addLayout(empl_form)
-        empl_layout.addWidget(empl_add_button)
-        empl_layout.addStretch()
+        self.empl_layout = QVBoxLayout()
+        self.empl_layout.addLayout(self.empl_form)
+        self.empl_layout.addWidget(self.empl_add_button)
+        self.empl_layout.addStretch()
 
         # создание и именование блока ввода данных
-        empl_box = QGroupBox("Данные нового сотрудника")
-        empl_box.setLayout(empl_layout)  # установка макета в блок
+        self.empl_box = QGroupBox("Данные нового сотрудника")
+        self.empl_box.setLayout(self.empl_layout)  # установка макета в блок
 
-        tab.insertTab(0, empl_box, 'Сотрудники')
+        self.tab.insertTab(0, self.empl_box, 'Сотрудники')
 
         # -------------------------------
         # Данная процедура повторяется ещё два раза для создания ещё двух вкладок
         # -------------------------------
 
-        task_form = QFormLayout()
+        self.task_form = QFormLayout()
 
-        task_lineedit_name = QLineEdit()
-        task_lineedit_description = QLineEdit()
-        task_spinbox_id_employ = QSpinBox()
-        task_dateedit_deadline = QDateEdit()
-        task_dateedit_deadline.setCalendarPopup(True)
-        task_dateedit_deadline.setDisplayFormat('yyyy-MM-dd')
-        task_dateedit_deadline.setDate(QDate(2000, 1, 1))
-        task_combobox_status = QComboBox()
-        task_combobox_status.addItem('Новая'); task_combobox_status.addItem('В работе')
-        task_combobox_status.addItem('Можно проверять'); task_combobox_status.addItem('Завершена')
+        self.task_lineedit_name = QLineEdit()
+        self.task_lineedit_description = QLineEdit()
+        self.task_spinbox_id_employ = QSpinBox()
+        self.task_spinbox_id_project = QSpinBox()
+        self.task_dateedit_deadline = QDateEdit()
+        self.task_dateedit_deadline.setCalendarPopup(True)
+        self.task_dateedit_deadline.setDisplayFormat('yyyy-MM-dd')
+        self.task_dateedit_deadline.setDate(QDate(2000, 1, 1))
+        self.task_combobox_status = QComboBox()
+        self.task_combobox_status.addItem('Новая'); self.task_combobox_status.addItem('В работе')
+        self.task_combobox_status.addItem('Можно проверять'); self.task_combobox_status.addItem('Завершена')
 
-        task_form.addRow("Название задачи:", task_lineedit_name)
-        task_form.addRow("Описание задачи:", task_lineedit_description)
-        task_form.addRow("ID работника:", task_spinbox_id_employ)
-        task_form.addRow("Дата дедлайна:", task_dateedit_deadline)
-        task_form.addRow("Статус задачи:", task_combobox_status)
+        self.task_form.addRow("Название задачи:", self.task_lineedit_name)
+        self.task_form.addRow("Описание задачи:", self.task_lineedit_description)
+        self.task_form.addRow("ID работника:", self.task_spinbox_id_employ)
+        self.task_form.addRow("ID проекта:", self.task_spinbox_id_project)
+        self.task_form.addRow("Дата дедлайна:", self.task_dateedit_deadline)
+        self.task_form.addRow("Статус задачи:", self.task_combobox_status)
 
-        task_add_button = QPushButton('Добавить данные')
+        self.task_add_button = QPushButton('Добавить данные')
+        self.task_add_button.clicked.connect(self.add_task)
 
-        task_layout = QVBoxLayout()
-        task_layout.addLayout(task_form)
-        task_layout.addWidget(task_add_button)
-        task_layout.addStretch()
+        self.task_layout = QVBoxLayout()
+        self.task_layout.addLayout(self.task_form)
+        self.task_layout.addWidget(self.task_add_button)
+        self.task_layout.addStretch()
 
-        task_box = QGroupBox("Данные новой задачи")
-        task_box.setLayout(task_layout)
+        self.task_box = QGroupBox("Данные новой задачи")
+        self.task_box.setLayout(self.task_layout)
 
-        tab.insertTab(1, task_box, 'Задачи')
+        self.tab.insertTab(1, self.task_box, 'Задачи')
         # -------------------------------
-        projects_form = QFormLayout()
+        self.projects_form = QFormLayout()
 
-        projects_lineedit_name = QLineEdit()
-        projects_lineedit_customer = QLineEdit()
-        projects_dateedit_deadline = QDateEdit()
-        projects_dateedit_deadline.setCalendarPopup(True)
-        projects_dateedit_deadline.setDisplayFormat('yyyy-MM-dd')
-        projects_dateedit_deadline.setDate(QDate(2000, 1 ,1))
-        projects_spinbox_prize = QSpinBox()
-        projects_spinbox_prize.setRange(0, 2147483647)
-        projects_spinbox_prize.setSuffix(" ₽")
-        projects_checkbox_finished = QCheckBox()
+        self.projects_lineedit_name = QLineEdit()
+        self.projects_lineedit_customer = QLineEdit()
+        self.projects_dateedit_deadline = QDateEdit()
+        self.projects_dateedit_deadline.setCalendarPopup(True)
+        self.projects_dateedit_deadline.setDisplayFormat('yyyy-MM-dd')
+        self.projects_dateedit_deadline.setDate(QDate(2000, 1 ,1))
+        self.projects_spinbox_prize = QSpinBox()
+        self.projects_spinbox_prize.setRange(0, 2147483647)
+        self.projects_spinbox_prize.setSuffix(" ₽")
+        self.projects_checkbox_finished = QCheckBox()
 
-        projects_form.addRow("Название проекты:", projects_lineedit_name)
+        self.projects_form.addRow("Название проекты:", self.projects_lineedit_name)
 
-        projects_form.addRow("Заказчик:", projects_lineedit_customer)
-        projects_form.addRow("Дата дедлайна:", projects_dateedit_deadline)
-        projects_form.addRow("Премия за проект:", projects_spinbox_prize)
-        projects_form.addRow("Завершён:", projects_checkbox_finished)
+        self.projects_form.addRow("Заказчик:", self.projects_lineedit_customer)
+        self.projects_form.addRow("Дата дедлайна:", self.projects_dateedit_deadline)
+        self.projects_form.addRow("Премия за проект:", self.projects_spinbox_prize)
+        self.projects_form.addRow("Завершён:", self.projects_checkbox_finished)
 
-        projects_add_button = QPushButton('Добавить данные')
+        self.projects_add_button = QPushButton('Добавить данные')
+        self.projects_add_button.clicked.connect(self.add_project)
 
-        projects_layout = QVBoxLayout()
-        projects_layout.addLayout(projects_form)
-        projects_layout.addWidget(projects_add_button)
-        projects_layout.addStretch()
+        self.projects_layout = QVBoxLayout()
+        self.projects_layout.addLayout(self.projects_form)
+        self.projects_layout.addWidget(self.projects_add_button)
+        self.projects_layout.addStretch()
 
-        projects_box = QGroupBox("Данные нового проекта")
-        projects_box.setLayout(projects_layout)
+        self.projects_box = QGroupBox("Данные нового проекта")
+        self.projects_box.setLayout(self.projects_layout)
 
-        tab.insertTab(2, projects_box, 'Проекты')
+        self.tab.insertTab(2, self.projects_box, 'Проекты')
 
         # -------------------------------
         # Конец создания вкладок
         # -------------------------------
 
-        close_button = QPushButton('Закрыть окно')
-        close_button.clicked.connect(self.close) # при нажатии кнопки окно будет закрываться
+        self.close_button = QPushButton('Закрыть окно')
+        self.close_button.clicked.connect(self.close) # при нажатии кнопки окно будет закрываться
 
-        layout = QVBoxLayout()
-        layout.addWidget(tab)
-        layout.addWidget(close_button)
-        layout.addStretch()
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.tab)
+        self.layout.addWidget(self.close_button)
+        self.layout.addStretch()
 
-        self.setLayout(layout)
+        self.setLayout(self.layout)
+
+    def add_employee(self):
+        full_name = self.empl_lineedit_fullname.text().strip()
+        age = self.empl_spinbox_age.value()
+        salary = self.empl_spinbox_salary.value()
+        duty = self.empl_combobox_duty.currentText()
+        skills = self.empl_lineedit_skills.text().split("#")[1:]
+        if not full_name or not age or not salary or not duty:
+            QMessageBox.warning(self, "Ввод", "ФИО, Возраст, Зарплата и Должность обязательны (NOT NULL)")
+            return
+        try:
+            with self.engine.begin() as conn:
+                conn.execute(insert(self.t["employee"]).values(
+                    full_name=full_name, age=age, salary=salary, duty=duty, skills=skills
+                ))
+            self.modelEmployee.refresh()
+            self.empl_lineedit_fullname.clear(); self.empl_spinbox_age.clear(); self.empl_lineedit_skills.clear();
+            #self.window().refresh_all_models()  # <-- было parent().parent()
+        except IntegrityError as e:
+            QMessageBox.critical(self, "Ошибка INSERT (UNIQUE/CHECK)", str(e.orig))
+        except SQLAlchemyError as e:
+            QMessageBox.critical(self, "Ошибка INSERT", str(e))
+
+    def _qdate_to_pydate(self, qd: QDate) -> date:
+        return date(qd.year(), qd.month(), qd.day())
+
+    def add_task(self):
+        name = self.task_lineedit_name.text().strip()
+        description = self.task_lineedit_description.text().strip()
+        deadline = self._qdate_to_pydate(self.task_dateedit_deadline.date())
+        status = self.task_combobox_status.currentText()
+        employee = self.task_spinbox_id_employ.value()
+        project = self.task_spinbox_id_project.value()
+
+        if not name or not status:
+            QMessageBox.warning(self, "Ввод", "Название и статус обязательны (NOT NULL)")
+            return
+        try:
+            with self.engine.begin() as conn:
+                conn.execute(insert(self.t["task"]).values(
+                    name=name, description=description, deadline=deadline, status=status, employee_id=employee
+                ))
+            self.modelTask.refresh()
+            #self.window().refresh_all_models()    # <-- было parent().parent()
+        except IntegrityError as e:
+            QMessageBox.critical(self, "Ошибка INSERT (UNIQUE/CHECK)", str(e.orig))
+        except SQLAlchemyError as e:
+            QMessageBox.critical(self, "Ошибка INSERT", str(e))
+
+    def add_project(self):
+        name = self.projects_lineedit_name.text().strip()
+        deadline = self._qdate_to_pydate(self.projects_dateedit_deadline.date())
+        prize = self.projects_spinbox_prize.value()
+        customer = self.projects_lineedit_customer.text().strip()
+        finished =self.projects_checkbox_finished.isChecked()
+
+        if not name or not prize:
+            QMessageBox.warning(self, "Ввод", "Название и Стоимость обязательны (NOT NULL)")
+            return
+        try:
+            with self.engine.begin() as conn:
+                conn.execute(insert(self.t["project"]).values(
+                    name=name, deadline=deadline, prize=prize, customer=customer, finished=finished
+                ))
+            self.modelProject.refresh()
+            #self.window().refresh_all_models()    # <-- было parent().parent()
+        except IntegrityError as e:
+            QMessageBox.critical(self, "Ошибка INSERT (UNIQUE/CHECK)", str(e.orig))
+        except SQLAlchemyError as e:
+            QMessageBox.critical(self, "Ошибка INSERT", str(e))
 
 
 # -------------------------------
@@ -468,7 +592,7 @@ class MainWindow(QWidget):
             QMessageBox.critical(self, "Схема", "Ошибка при создании схемы. См. консоль/лог.")
 
     def addData(self):
-        dlg = AddDataWindow()
+        dlg = AddDataWindow(self.engine, self.tables)
         dlg.exec()
 
     def showDataBase(self):
