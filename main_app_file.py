@@ -14,12 +14,12 @@ from PySide6.QtCore import QDate, Qt, QAbstractTableModel, QModelIndex
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QGroupBox, QFormLayout, QMessageBox, \
     QLineEdit, QGridLayout, QTabWidget, QComboBox, QDialog, QCheckBox, QDateEdit, QSpinBox, QTableWidget, QHeaderView, \
-    QTableWidgetItem, QAbstractItemView
+    QTableWidgetItem, QAbstractItemView, QTableView
 
 # ===== SQLAlchemy =====
 from sqlalchemy import (
     create_engine, MetaData, Table, Column, Integer, String, Date,
-    ForeignKey, UniqueConstraint, CheckConstraint, select, insert, delete, ForeignKeyConstraint, Boolean
+    ForeignKey, UniqueConstraint, CheckConstraint, select, insert, delete, ForeignKeyConstraint, Boolean, asc, desc
 )
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import URL
@@ -170,6 +170,22 @@ class SATableModel(QAbstractTableModel):
 
     def pk_value_at(self, row: int):
         return self._rows[row].get(self.pk_col.name) if 0 <= row < len(self._rows) else None
+
+    def sort(self, column: int, order=Qt.AscendingOrder):
+        if column < 0 or column >= len(self.columns):
+            return
+
+        col_name = self.columns[column]
+
+        sort_order = asc(col_name) if order == Qt.AscendingOrder else desc(col_name)
+
+        self.beginResetModel()
+        try:
+            with self.engine.connect() as conn:
+                res = conn.execute(select(self.table).order_by(sort_order))
+                self._rows = [dict(r._mapping) for r in res]
+        finally:
+            self.endResetModel()
 
 # -------------------------------
 # Окно Добавления данных в БД
@@ -382,58 +398,46 @@ class AddDataWindow(QDialog):
 # Окно отображения данных из БД
 # -------------------------------
 class ShowDataBaseWindow(QDialog):
-    def __init__(self):
+    def __init__(self, engine: Engine, tables: Dict[str, Table]):
         super().__init__()
         self.setWindowTitle('Data Base show')
-        self.setGeometry(300, 300, 650, 400)
+        self.resize(900, 600)
+        self.engine = engine
+        self.t = tables
+        self.modelEmployee = SATableModel(engine, self.t["employee"], self)
+        self.modelTask = SATableModel(engine, self.t["task"], self)
+        self.modelProject = SATableModel(engine, self.t["project"], self)
 
         tab = QTabWidget()
 
+        self.empl_table = QTableView()
+        self.empl_table.setSortingEnabled(True)
+        self.empl_table.setModel(self.modelEmployee)
+        self.empl_table.setSelectionBehavior(QTableView.SelectRows)
+        self.empl_table.setSelectionMode(QTableView.SingleSelection)
 
-        empl_table = QTableWidget() # создание таблички
-        empl_table.setColumnCount(6) # установка 6 колонок в табличке
-        empl_table.setRowCount(7)
-        empl_table.setEditTriggers(QAbstractItemView.NoEditTriggers) # Запрет на редактирование ячеек
-        empl_table.setHorizontalHeaderItem(0, QTableWidgetItem('ID'))
-        empl_table.setHorizontalHeaderItem(1, QTableWidgetItem('Полное имя'))
-        empl_table.setHorizontalHeaderItem(2, QTableWidgetItem('Возраст'))
-        empl_table.setHorizontalHeaderItem(3, QTableWidgetItem('Зарплата'))
-        empl_table.setHorizontalHeaderItem(4, QTableWidgetItem('Должность'))
-        empl_table.setHorizontalHeaderItem(5, QTableWidgetItem('Умения'))
-
-
-        tab.insertTab(0, empl_table, 'Сотрудники') # добавляем вкладочку
+        tab.insertTab(0, self.empl_table, 'Сотрудники') # добавляем вкладочку
 
 
         # -------------------------------
         # Данная процедура повторяется ещё три раза для создания ещё трёх вкладок
         # -------------------------------
 
-        task_table = QTableWidget()
-        task_table.setColumnCount(6)
-        task_table.setRowCount(7)
-        task_table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # Запрет на редактирование ячеек
-        task_table.setHorizontalHeaderItem(0, QTableWidgetItem('ID'))
-        task_table.setHorizontalHeaderItem(1, QTableWidgetItem('Название'))
-        task_table.setHorizontalHeaderItem(2, QTableWidgetItem('Описание'))
-        task_table.setHorizontalHeaderItem(3, QTableWidgetItem('ID работника'))
-        task_table.setHorizontalHeaderItem(4, QTableWidgetItem('Дата дедлайна'))
-        task_table.setHorizontalHeaderItem(5, QTableWidgetItem('Статус задачи'))
+        self.task_table = QTableView()
+        self.task_table.setSortingEnabled(True)
+        self.task_table.setModel(self.modelTask)
+        self.task_table.setSelectionBehavior(QTableView.SelectRows)
+        self.task_table.setSelectionMode(QTableView.SingleSelection)
 
-        tab.insertTab(1, task_table, 'Задачи')
+        tab.insertTab(1, self.task_table, 'Задачи')
         # -------------------------------
-        projects_table = QTableWidget()
-        projects_table.setColumnCount(6)
-        projects_table.setRowCount(7)
-        projects_table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # Запрет на редактирование ячеек
-        projects_table.setHorizontalHeaderItem(0, QTableWidgetItem('ID'))
-        projects_table.setHorizontalHeaderItem(1, QTableWidgetItem('Название'))
-        projects_table.setHorizontalHeaderItem(2, QTableWidgetItem('Заказчик'))
-        projects_table.setHorizontalHeaderItem(3, QTableWidgetItem('Дата дедлайна'))
-        projects_table.setHorizontalHeaderItem(4, QTableWidgetItem('Премия за проект'))
-        projects_table.setHorizontalHeaderItem(5, QTableWidgetItem('Завершён'))
+        self.project_table = QTableView()
+        self.project_table.setSortingEnabled(True)
+        self.project_table.setModel(self.modelProject)
+        self.project_table.setSelectionBehavior(QTableView.SelectRows)
+        self.project_table.setSelectionMode(QTableView.SingleSelection)
 
-        tab.insertTab(2, projects_table, 'Проекты')
+        tab.insertTab(2, self.project_table, 'Проекты')
         # -------------------------------
         # protas = project + task
         protas_table = QTableWidget()
@@ -596,7 +600,7 @@ class MainWindow(QWidget):
         dlg.exec()
 
     def showDataBase(self):
-        dlg = ShowDataBaseWindow()
+        dlg = ShowDataBaseWindow(self.engine, self.tables)
         dlg.exec()
 
 
