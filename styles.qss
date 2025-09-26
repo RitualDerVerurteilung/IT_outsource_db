@@ -25,6 +25,13 @@ QTabBar::tab:selected {
     border-color: #0d6efd;
     border-bottom-color: #000;
 }
+QTabWidget#show::tab-bar {
+    left: 22px;
+}
+QTabWidget#show::pane {
+    position: absolute;
+    top: -0.1em;
+}
 
 
 

@@ -8,3 +8,30 @@
 2025-09-26 16:00:49.608186: Соединение закрыто.
 2025-09-26 16:43:02.491187: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
 2025-09-26 16:43:11.668342: Соединение закрыто.
+2025-09-26 20:38:55.214493: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 20:39:41.456864: Схема БД создана: students, courses, enrollments.
+2025-09-26 20:40:00.071205: Ошибка при добавления записи задачи. Ошибка INSERT (UNIQUE/CHECK)
+2025-09-26 20:40:07.711758: Ошибка при добавления записи задачи. Ошибка INSERT (UNIQUE/CHECK)
+2025-09-26 20:44:09.449723: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 20:46:42.768955: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 20:46:55.898813: Запись сотрудника успешно добавлена!
+2025-09-26 20:48:35.891764: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 20:49:36.506155: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:04:30.712958: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:05:00.445842: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:05:17.801691: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:06:47.878054: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:07:07.350433: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:07:41.560047: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:07:58.341526: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:08:15.998504: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:08:37.330304: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:09:03.032075: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:10:20.770300: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:10:43.647129: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:11:47.189022: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:12:06.918539: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:13:47.534199: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-26 21:14:15.150067: Ошибка при добавления записи проекта. Название и статус обязательны
+2025-09-26 21:14:17.296695: Ошибка при добавления записи задачи. Название и статус обязательны
+2025-09-26 21:14:19.197933: Ошибка при добавления записи сотрудника. Название и статус обязательны
