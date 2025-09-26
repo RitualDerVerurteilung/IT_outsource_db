@@ -27,6 +27,13 @@ from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.dialects.postgresql import ARRAY
 
+from datetime import datetime
+
+def makeLog(str):
+    f = open('log.txt','a')
+    now = datetime.now()
+    f.write(f"{now}: {str}\n")
+    f.close()
 
 # -------------------------------
 # Конфигурация подключения
@@ -201,6 +208,7 @@ class AddDataWindow(QDialog):
         self.modelEmployee = SATableModel(engine, self.t["employee"], self)
         self.modelTask = SATableModel(engine, self.t["task"], self)
         self.modelProject = SATableModel(engine, self.t["project"], self)
+        self.modelProject = SATableModel(engine, self.t["project_task"], self)
 
         self.tab = QTabWidget()
 
@@ -337,6 +345,7 @@ class AddDataWindow(QDialog):
         skills = self.empl_lineedit_skills.text().split("#")[1:]
         if not full_name or not age or not salary or not duty:
             QMessageBox.warning(self, "Ввод", "ФИО, Возраст, Зарплата и Должность обязательны (NOT NULL)")
+            makeLog("Ошибка при добавления записи сотрудника. Название и статус обязательны")
             return
         try:
             with self.engine.begin() as conn:
@@ -345,11 +354,13 @@ class AddDataWindow(QDialog):
                 ))
             self.modelEmployee.refresh()
             self.empl_lineedit_fullname.clear(); self.empl_spinbox_age.clear(); self.empl_lineedit_skills.clear()
-            #self.window().refresh_all_models()  # <-- было parent().parent()
+            makeLog("Запись сотрудника успешно добавлена!")
         except IntegrityError as e:
             QMessageBox.critical(self, "Ошибка INSERT (UNIQUE/CHECK)", str(e.orig))
+            makeLog("Ошибка при добавления записи сотрудника. Ошибка INSERT (UNIQUE/CHECK)")
         except SQLAlchemyError as e:
             QMessageBox.critical(self, "Ошибка INSERT", str(e))
+            makeLog(f"Ошибка при добавления записи сотрудника. {e}")
 
     def _qdate_to_pydate(self, qd: QDate) -> date:
         return date(qd.year(), qd.month(), qd.day())
@@ -364,18 +375,27 @@ class AddDataWindow(QDialog):
 
         if not name or not status:
             QMessageBox.warning(self, "Ввод", "Название и статус обязательны (NOT NULL)")
+            makeLog("Ошибка при добавления записи задачи. Название и статус обязательны")
             return
         try:
+            task = -1
             with self.engine.begin() as conn:
-                conn.execute(insert(self.t["task"]).values(
+                task = conn.execute(insert(self.t["task"]).values(
                     name=name, description=description, deadline=deadline, status=status, employee_id=employee
+                ).returning(self.t["task"].c.task_id))
+            with self.engine.begin() as conn:
+                task = conn.execute(insert(self.t["project_task"]).values(
+                    task_id=task.scalar(), project_id=project
                 ))
+            self.task_lineedit_name.clear(); self.task_lineedit_description.clear(); self.task_spinbox_id_employ.clear(); self.task_spinbox_id_project.clear()
             self.modelTask.refresh()
-            #self.window().refresh_all_models()    # <-- было parent().parent()
+            makeLog("Запись задачи успешно добавлена!")
         except IntegrityError as e:
             QMessageBox.critical(self, "Ошибка INSERT (UNIQUE/CHECK)", str(e.orig))
+            makeLog("Ошибка при добавления записи задачи. Ошибка INSERT (UNIQUE/CHECK)")
         except SQLAlchemyError as e:
             QMessageBox.critical(self, "Ошибка INSERT", str(e))
+            makeLog(f"Ошибка при добавления записи задачи. {e}")
 
     def add_project(self):
         name = self.projects_lineedit_name.text().strip()
@@ -386,6 +406,7 @@ class AddDataWindow(QDialog):
 
         if not name or not prize:
             QMessageBox.warning(self, "Ввод", "Название и Стоимость обязательны (NOT NULL)")
+            makeLog("Ошибка при добавления записи проекта. Название и статус обязательны")
             return
         try:
             with self.engine.begin() as conn:
@@ -393,11 +414,13 @@ class AddDataWindow(QDialog):
                     name=name, deadline=deadline, prize=prize, customer=customer, finished=finished
                 ))
             self.modelProject.refresh()
-            #self.window().refresh_all_models()    # <-- было parent().parent()
+            makeLog("Запись проекта успешно добавлена!")
         except IntegrityError as e:
             QMessageBox.critical(self, "Ошибка INSERT (UNIQUE/CHECK)", str(e.orig))
+            makeLog("Ошибка при добавления записи проекта. Ошибка INSERT (UNIQUE/CHECK)")
         except SQLAlchemyError as e:
             QMessageBox.critical(self, "Ошибка INSERT", str(e))
+            makeLog(f"Ошибка при добавления записи проекта. {e}")
 
 
 # -------------------------------
@@ -550,28 +573,24 @@ class MainWindow(QWidget):
         )
 
     def do_connect(self):
-        main = self.window()  # <-- было parent().parent()
-        # если уже подключены — просим отключиться
+        main = self.window()
         if getattr(main, "engine", None) is not None:
-            #self.log.append("Уже подключено. Нажмите «Отключиться» для переподключения.")
+            makeLog("Уже подключено. Нажмите «Отключиться» для переподключения.")
             return
         cfg = self.current_cfg()
         try:
             engine = make_engine(cfg)
             md, tables = build_metadata()
             main.attach_engine(engine, md, tables)
-            #self.log.append(
-            #    f"Успешное подключение: psycopg2 → {cfg.host}:{cfg.port}/{cfg.dbname} (user={cfg.user})"
-            #)
+            makeLog(f"Успешное подключение: psycopg2 => {cfg.host}:{cfg.port}/{cfg.dbname} (user={cfg.user})")
             self.button_conn.setDisabled(True)
             self.button_create.setDisabled(False)
             self.button_adddata.setDisabled(False)
             self.button_showdb.setDisabled(False)
             self.button_disconn.setDisabled(False)
-            #main.ensure_data_tabs()
         except SQLAlchemyError as e:
             pass
-            #self.log.append(f"Ошибка подключения: {e}")
+            makeLog(f"Ошибка подключения: {e}")
 
     def attach_engine(self, engine: Engine, md: MetaData, tables: Dict[str, Table]):
         self.engine = engine
@@ -587,18 +606,20 @@ class MainWindow(QWidget):
         self.button_adddata.setDisabled(True)
         self.button_showdb.setDisabled(True)
         self.button_disconn.setDisabled(True)
-        #self.log.append("Соединение закрыто.")
+        makeLog("Соединение закрыто.")
 
     def reset_db(self):
         main = self.window()  # <-- было parent().parent()
         if getattr(main, "engine", None) is None:
             QMessageBox.warning(self, "Схема", "Нет подключения к БД.")
+            makeLog("Нет подключения к БД.")
             return
         if drop_and_create_schema_sa(main.engine, main.md):
             pass
-            #self.log.append("Схема БД создана: students, courses, enrollments.")
+            makeLog("Схема БД создана: students, courses, enrollments.")
         else:
-            QMessageBox.critical(self, "Схема", "Ошибка при создании схемы. См. консоль/лог.")
+            QMessageBox.critical(self, "Схема", "Ошибка при создании схемы.")
+            makeLog("Ошибка при создании схемы.")
 
     def addData(self):
         dlg = AddDataWindow(self.engine, self.tables)
