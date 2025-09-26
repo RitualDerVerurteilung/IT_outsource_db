@@ -468,15 +468,15 @@ class ShowDataBaseWindow(QDialog):
         tab.insertTab(2, self.project_table, 'Проекты')
         # -------------------------------
         # protas = project + task
-        protas_table = QTableWidget()
-        protas_table.setColumnCount(3)
-        protas_table.setRowCount(7)
-        protas_table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # Запрет на редактирование ячеек
-        protas_table.setHorizontalHeaderItem(0, QTableWidgetItem('ID'))
-        protas_table.setHorizontalHeaderItem(1, QTableWidgetItem('ID задачи'))
-        protas_table.setHorizontalHeaderItem(2, QTableWidgetItem('ID проекта'))
+        #protas_table = QTableWidget()
+        #protas_table.setColumnCount(3)
+        #protas_table.setRowCount(7)
+        #protas_table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # Запрет на редактирование ячеек
+        #protas_table.setHorizontalHeaderItem(0, QTableWidgetItem('ID'))
+        #protas_table.setHorizontalHeaderItem(1, QTableWidgetItem('ID задачи'))
+        #protas_table.setHorizontalHeaderItem(2, QTableWidgetItem('ID проекта'))
 
-        tab.insertTab(3, protas_table, 'Проекты/задачи')
+        #tab.insertTab(3, protas_table, 'Проекты/задачи')
         # -------------------------------
         # Конец создания вкладок
         # -------------------------------
