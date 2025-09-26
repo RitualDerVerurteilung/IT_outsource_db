@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 from dataclasses import dataclass
 from multiprocessing.managers import Array
 from typing import Optional, List, Dict, Any
@@ -14,7 +15,7 @@ from PySide6.QtCore import QDate, Qt, QAbstractTableModel, QModelIndex
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QGroupBox, QFormLayout, QMessageBox, \
     QLineEdit, QGridLayout, QTabWidget, QComboBox, QDialog, QCheckBox, QDateEdit, QSpinBox, QTableWidget, QHeaderView, \
-    QTableWidgetItem, QAbstractItemView, QTableView
+    QTableWidgetItem, QAbstractItemView, QTableView, QAbstractSpinBox
 
 # ===== SQLAlchemy =====
 from sqlalchemy import (
@@ -207,8 +208,10 @@ class AddDataWindow(QDialog):
         # текстовые и числовые поля для блока ввода данных
         self.empl_lineedit_fullname = QLineEdit()
         self.empl_spinbox_age = QSpinBox()
+        self.empl_spinbox_age.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.empl_spinbox_age.setRange(0, 200)
         self.empl_spinbox_salary = QSpinBox()
+        self.empl_spinbox_salary.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.empl_spinbox_salary.setRange(0, 2147483647)
         self.empl_spinbox_salary.setSuffix(" ₽")
         self.empl_combobox_duty = QComboBox()
@@ -238,16 +241,20 @@ class AddDataWindow(QDialog):
 
         self.tab.insertTab(0, self.empl_box, 'Сотрудники')
 
-        # -------------------------------
+
         # Данная процедура повторяется ещё два раза для создания ещё двух вкладок
-        # -------------------------------
+
 
         self.task_form = QFormLayout()
 
         self.task_lineedit_name = QLineEdit()
         self.task_lineedit_description = QLineEdit()
         self.task_spinbox_id_employ = QSpinBox()
+        self.task_spinbox_id_employ.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.task_spinbox_id_employ.setRange(0, 2147483647)
         self.task_spinbox_id_project = QSpinBox()
+        self.task_spinbox_id_project.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.task_spinbox_id_project.setRange(0, 2147483647)
         self.task_dateedit_deadline = QDateEdit()
         self.task_dateedit_deadline.setCalendarPopup(True)
         self.task_dateedit_deadline.setDisplayFormat('yyyy-MM-dd')
@@ -285,6 +292,7 @@ class AddDataWindow(QDialog):
         self.projects_dateedit_deadline.setDisplayFormat('yyyy-MM-dd')
         self.projects_dateedit_deadline.setDate(QDate(2000, 1 ,1))
         self.projects_spinbox_prize = QSpinBox()
+        self.projects_spinbox_prize.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.projects_spinbox_prize.setRange(0, 2147483647)
         self.projects_spinbox_prize.setSuffix(" ₽")
         self.projects_checkbox_finished = QCheckBox()
@@ -309,9 +317,7 @@ class AddDataWindow(QDialog):
 
         self.tab.insertTab(2, self.projects_box, 'Проекты')
 
-        # -------------------------------
         # Конец создания вкладок
-        # -------------------------------
 
         self.close_button = QPushButton('Закрыть окно')
         self.close_button.clicked.connect(self.close) # при нажатии кнопки окно будет закрываться
@@ -338,7 +344,7 @@ class AddDataWindow(QDialog):
                     full_name=full_name, age=age, salary=salary, duty=duty, skills=skills
                 ))
             self.modelEmployee.refresh()
-            self.empl_lineedit_fullname.clear(); self.empl_spinbox_age.clear(); self.empl_lineedit_skills.clear();
+            self.empl_lineedit_fullname.clear(); self.empl_spinbox_age.clear(); self.empl_lineedit_skills.clear()
             #self.window().refresh_all_models()  # <-- было parent().parent()
         except IntegrityError as e:
             QMessageBox.critical(self, "Ошибка INSERT (UNIQUE/CHECK)", str(e.orig))
@@ -419,9 +425,8 @@ class ShowDataBaseWindow(QDialog):
         tab.insertTab(0, self.empl_table, 'Сотрудники') # добавляем вкладочку
 
 
-        # -------------------------------
         # Данная процедура повторяется ещё три раза для создания ещё трёх вкладок
-        # -------------------------------
+
 
         self.task_table = QTableView()
         self.task_table.setSortingEnabled(True)
@@ -605,6 +610,7 @@ class MainWindow(QWidget):
 
 
 app = QApplication(sys.argv)
+app.setStyleSheet(Path('styles.qss').read_text())
 window = MainWindow()
 window.show()
 sys.exit(app.exec())
