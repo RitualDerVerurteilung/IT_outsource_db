@@ -120,7 +120,6 @@ def build_metadata() -> (MetaData, Dict[str, Table]):
         ForeignKeyConstraint(["project_id"], ["project.project_id"], name="fk_project"),
         ForeignKeyConstraint(["task_id"], ["task.task_id"], name="fk_task"),
     )
-
     return md, {"employee": employee, "task": task, "project": project, "project_task": project_task}
 
 
@@ -214,10 +213,10 @@ class AddDataWindow(QDialog):
 
         self.empl_form = QFormLayout()  # макет для блока ввода данных для таблицы Сотрудники
         # текстовые и числовые поля для блока ввода данных
-        self.empl_lineedit_fullname = QLineEdit()
+        self.empl_lineedit_fullname = QLineEdit(); self.empl_lineedit_fullname.setPlaceholderText("Иванов Иван Иванович")
         self.empl_spinbox_age = QSpinBox()
         self.empl_spinbox_age.setButtonSymbols(QAbstractSpinBox.NoButtons)
-        self.empl_spinbox_age.setRange(1, 200)
+        self.empl_spinbox_age.setRange(18, 200)
         self.empl_spinbox_salary = QSpinBox()
         self.empl_spinbox_salary.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.empl_spinbox_salary.setRange(1, 2147483647)
@@ -226,7 +225,7 @@ class AddDataWindow(QDialog):
         self.empl_combobox_duty.addItem('Frontend'); self.empl_combobox_duty.addItem('Backend'); self.empl_combobox_duty.addItem('Devops')
         self.empl_combobox_duty.addItem('Teamlead'); self.empl_combobox_duty.addItem('HR'); self.empl_combobox_duty.addItem('PM')
         self.empl_combobox_duty.addItem('CEO')
-        self.empl_lineedit_skills = QLineEdit()
+        self.empl_lineedit_skills = QLineEdit(); self.empl_lineedit_skills.setPlaceholderText("#SQL#Python")
 
         # добавление полей ввода в макет
         self.empl_form.addRow("Полное имя:", self.empl_lineedit_fullname)
@@ -255,7 +254,7 @@ class AddDataWindow(QDialog):
 
         self.task_form = QFormLayout()
 
-        self.task_lineedit_name = QLineEdit()
+        self.task_lineedit_name = QLineEdit(); self.task_lineedit_name.setPlaceholderText("Разгром")
         self.task_lineedit_description = QLineEdit()
         self.task_spinbox_id_employ = QSpinBox()
         self.task_spinbox_id_employ.setButtonSymbols(QAbstractSpinBox.NoButtons)
@@ -293,8 +292,8 @@ class AddDataWindow(QDialog):
         # -------------------------------
         self.projects_form = QFormLayout()
 
-        self.projects_lineedit_name = QLineEdit()
-        self.projects_lineedit_customer = QLineEdit()
+        self.projects_lineedit_name = QLineEdit(); self.projects_lineedit_name.setPlaceholderText("Разгром")
+        self.projects_lineedit_customer = QLineEdit(); self.projects_lineedit_customer.setPlaceholderText("ООО 'Рога и Копыта'")
         self.projects_dateedit_deadline = QDateEdit()
         self.projects_dateedit_deadline.setCalendarPopup(True)
         self.projects_dateedit_deadline.setDisplayFormat('yyyy-MM-dd')
