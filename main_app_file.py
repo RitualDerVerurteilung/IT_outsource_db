@@ -96,8 +96,8 @@ def build_metadata() -> (MetaData, Dict[str, Table]):
         Column("name", String(300), nullable=False),
         Column("description", String),
         Column("deadline", Date),
-        Column("status", String(30), nullable=False),
-        CheckConstraint("status IN ('Новая', 'В процессе', 'Можно проверять', 'Завершена')"),
+        Column("status", String(50), nullable=False),
+        CheckConstraint("status IN ('Новая', 'В работе', 'Можно проверять', 'Завершена')"),
         ForeignKeyConstraint(["employee_id"], ["employee.employee_id"], name="fk_employee"),
     )
 
@@ -222,7 +222,7 @@ class AddDataWindow(QDialog):
         self.empl_spinbox_salary.setRange(1, 2147483647)
         self.empl_spinbox_salary.setSuffix(" ₽")
         self.empl_combobox_duty = QComboBox()
-        self.empl_combobox_duty.addItem('Frontend'); self.empl_combobox_duty.addItem('Backend'); self.empl_combobox_duty.addItem('Devops')
+        self.empl_combobox_duty.addItem('Frontend'); self.empl_combobox_duty.addItem('Backend'); self.empl_combobox_duty.addItem('DevOps')
         self.empl_combobox_duty.addItem('Teamlead'); self.empl_combobox_duty.addItem('HR'); self.empl_combobox_duty.addItem('PM')
         self.empl_combobox_duty.addItem('CEO')
         self.empl_lineedit_skills = QLineEdit(); self.empl_lineedit_skills.setPlaceholderText("#SQL#Python")
