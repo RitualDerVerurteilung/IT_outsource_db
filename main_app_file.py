@@ -96,7 +96,7 @@ def build_metadata() -> (MetaData, Dict[str, Table]):
         Column("name", String(300), nullable=False),
         Column("description", String),
         Column("deadline", Date),
-        Column("status", String(10), nullable=False),
+        Column("status", String(30), nullable=False),
         CheckConstraint("status IN ('Новая', 'В процессе', 'Можно проверять', 'Завершена')"),
         ForeignKeyConstraint(["employee_id"], ["employee.employee_id"], name="fk_employee"),
     )
@@ -412,6 +412,7 @@ class AddDataWindow(QDialog):
                 conn.execute(insert(self.t["project"]).values(
                     name=name, deadline=deadline, prize=prize, customer=customer, finished=finished
                 ))
+            self.projects_lineedit_name.clear(); self.projects_lineedit_customer.clear(); self.projects_spinbox_prize.clear()
             self.modelProject.refresh()
             makeLog("Запись проекта успешно добавлена!")
         except IntegrityError as e:
