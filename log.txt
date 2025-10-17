@@ -35,3 +35,121 @@
 2025-09-26 21:14:15.150067: Ошибка при добавления записи проекта. Название и статус обязательны
 2025-09-26 21:14:17.296695: Ошибка при добавления записи задачи. Название и статус обязательны
 2025-09-26 21:14:19.197933: Ошибка при добавления записи сотрудника. Название и статус обязательны
+2025-09-27 13:41:26.842824: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-27 13:42:12.659765: Запись проекта успешно добавлена!
+2025-09-27 13:42:38.732380: Ошибка при добавления записи задачи. (psycopg2.errors.StringDataRightTruncation) ОШИБКА:  значение не умещается в тип character varying(10)
+
+[SQL: INSERT INTO task (employee_id, name, description, deadline, status) VALUES (%(employee_id)s, %(name)s, %(description)s, %(deadline)s, %(status)s) RETURNING task.task_id]
+[parameters: {'employee_id': 1, 'name': 'dfdf', 'description': 'dfdf', 'deadline': datetime.date(2000, 1, 1), 'status': 'Можно проверять'}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+2025-09-27 13:43:03.386284: Ошибка при добавления записи задачи. (psycopg2.errors.StringDataRightTruncation) ОШИБКА:  значение не умещается в тип character varying(10)
+
+[SQL: INSERT INTO task (employee_id, name, description, deadline, status) VALUES (%(employee_id)s, %(name)s, %(description)s, %(deadline)s, %(status)s) RETURNING task.task_id]
+[parameters: {'employee_id': 1, 'name': 'dfdf', 'description': 'dfdf', 'deadline': datetime.date(2000, 1, 1), 'status': 'Можно проверять'}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+2025-09-27 13:43:09.861373: Ошибка при добавления записи задачи. (psycopg2.errors.StringDataRightTruncation) ОШИБКА:  значение не умещается в тип character varying(10)
+
+[SQL: INSERT INTO task (employee_id, name, description, deadline, status) VALUES (%(employee_id)s, %(name)s, %(description)s, %(deadline)s, %(status)s) RETURNING task.task_id]
+[parameters: {'employee_id': 1, 'name': 'dfdf', 'description': 'dfdf', 'deadline': datetime.date(2000, 1, 1), 'status': 'Можно проверять'}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+2025-09-27 13:43:14.607743: Запись сотрудника успешно добавлена!
+2025-09-27 13:43:21.736557: Запись сотрудника успешно добавлена!
+2025-09-27 13:43:26.920308: Запись проекта успешно добавлена!
+2025-09-27 13:43:27.400875: Запись проекта успешно добавлена!
+2025-09-27 13:43:27.755256: Запись проекта успешно добавлена!
+2025-09-27 13:43:30.482598: Запись задачи успешно добавлена!
+2025-09-27 13:43:31.769858: Ошибка при добавления записи задачи. Название и статус обязательны
+2025-09-27 13:43:35.842568: Запись задачи успешно добавлена!
+2025-09-27 13:43:51.952947: Ошибка при добавления записи задачи. (psycopg2.errors.StringDataRightTruncation) ОШИБКА:  значение не умещается в тип character varying(10)
+
+[SQL: INSERT INTO task (employee_id, name, description, deadline, status) VALUES (%(employee_id)s, %(name)s, %(description)s, %(deadline)s, %(status)s) RETURNING task.task_id]
+[parameters: {'employee_id': 1, 'name': '1', 'description': '1', 'deadline': datetime.date(2000, 1, 1), 'status': 'Можно проверять'}]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+2025-09-27 13:44:01.655155: Ошибка при добавления записи задачи. Ошибка INSERT (UNIQUE/CHECK)
+2025-09-27 13:44:05.311897: Запись задачи успешно добавлена!
+2025-09-27 13:44:27.525069: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-27 13:48:30.290578: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-27 13:51:43.757643: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-27 13:51:53.098192: Ошибка при добавления записи задачи. Ошибка INSERT (UNIQUE/CHECK)
+2025-09-27 13:52:07.380588: Запись задачи успешно добавлена!
+2025-09-27 13:52:28.902487: Ошибка при добавления записи задачи. Ошибка INSERT (UNIQUE/CHECK)
+2025-09-27 13:52:30.683925: Запись задачи успешно добавлена!
+2025-09-27 13:52:54.206286: Запись задачи успешно добавлена!
+2025-09-27 13:52:57.313873: Запись сотрудника успешно добавлена!
+2025-09-27 13:58:59.755628: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-09-27 14:38:22.480785: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-04 14:26:28.557053: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-04 14:26:32.929771: Схема БД создана: students, courses, enrollments.
+2025-10-04 15:02:14.534284: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-04 15:03:26.878953: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-04 15:04:57.042735: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-04 15:05:32.255464: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-04 15:09:57.578844: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-04 15:10:03.772385: Ошибка при добавления записи сотрудника. Название и статус обязательны
+2025-10-04 15:10:08.068191: Запись сотрудника успешно добавлена!
+2025-10-04 15:21:46.176338: Соединение закрыто.
+2025-10-04 15:21:46.957652: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-11 15:04:16.486645: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-11 15:05:12.300914: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-11 15:05:21.492458: Соединение закрыто.
+2025-10-11 15:05:22.292584: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-11 15:05:23.183789: Соединение закрыто.
+2025-10-11 15:05:23.927888: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-11 15:05:24.988261: Соединение закрыто.
+2025-10-11 15:06:16.711858: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-11 15:06:18.893791: Соединение закрыто.
+2025-10-11 15:06:22.472944: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-11 15:06:23.818630: Соединение закрыто.
+2025-10-11 15:06:36.404701: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-11 15:06:37.129137: Соединение закрыто.
+2025-10-11 15:07:24.578620: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-11 15:07:30.290889: Запись сотрудника успешно добавлена!
+2025-10-11 15:07:42.575082: Соединение закрыто.
+2025-10-17 03:21:38.157065: Ошибка подключения: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: fe_sendauth: no password supplied
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-10-17 03:21:41.252568: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:23:33.129397: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:26:32.038979: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:27:00.720626: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:27:03.093515: Соединение закрыто.
+2025-10-17 03:27:14.940480: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:27:16.048730: Соединение закрыто.
+2025-10-17 03:27:16.643628: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:27:17.731021: Соединение закрыто.
+2025-10-17 03:27:18.250106: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:27:26.095247: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:27:30.184367: Соединение закрыто.
+2025-10-17 03:28:37.754230: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:36:55.592056: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:38:14.969617: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:38:32.521583: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:57:18.670235: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:57:36.634928: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:59:03.746122: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:59:17.999492: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 03:59:53.536378: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 04:02:02.759575: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 04:04:08.791967: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 04:13:04.229100: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 04:14:08.486644: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 04:14:30.945153: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 04:19:19.061160: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 04:19:37.695730: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 04:19:58.685476: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:19:07.793478: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:20:07.773205: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:24:35.395551: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:25:03.495150: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:40:03.599581: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:41:01.372563: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:42:15.313326: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:42:32.247496: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:43:10.513823: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:49:46.970453: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:50:32.300833: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:50:55.072817: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:51:24.111485: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 11:51:44.516790: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 12:00:56.746181: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)
+2025-10-17 14:31:13.236566: Успешное подключение: psycopg2 => localhost:5432/outsource (user=postgres)

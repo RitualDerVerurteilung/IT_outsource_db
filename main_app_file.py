@@ -7,15 +7,12 @@ from datetime import date
 import faulthandler
 from xmlrpc.client import Boolean
 
-from Scripts.pywin32_testall import project_root
-
 faulthandler.enable()
 
 from PySide6.QtCore import QDate, Qt, QAbstractTableModel, QModelIndex
-from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QGroupBox, QFormLayout, QMessageBox, \
-    QLineEdit, QGridLayout, QTabWidget, QComboBox, QDialog, QCheckBox, QDateEdit, QSpinBox, QTableWidget, QHeaderView, \
-    QTableWidgetItem, QAbstractItemView, QTableView, QAbstractSpinBox
+    QLineEdit, QGridLayout, QTabWidget, QComboBox, QDialog, QCheckBox, QDateEdit, QSpinBox, \
+    QTableView, QAbstractSpinBox, QHBoxLayout
 
 # ===== SQLAlchemy =====
 from sqlalchemy import (
@@ -193,6 +190,124 @@ class SATableModel(QAbstractTableModel):
                 self._rows = [dict(r._mapping) for r in res]
         finally:
             self.endResetModel()
+
+
+# -------------------------------
+# Окно Добавления данных в БД
+# -------------------------------
+class AlterTableWindow(QDialog):
+    def __init__(self, engine: Engine, tables: Dict[str, Table]):
+        super().__init__()
+        self.setWindowTitle('Alter Table')
+        self.setGeometry(300, 300, 600, 220)
+        self.engine = engine
+        self.t = tables
+
+        self.tab = QTabWidget()
+
+        self.empl_form = QFormLayout()  # макет для блока ввода данных для таблицы Сотрудники
+        # текстовые и числовые поля для блока ввода данных
+        self.empl_lineedit_fullname = QLineEdit();
+        self.empl_lineedit_fullname.setPlaceholderText("Иванов Иван Иванович")
+        self.empl_spinbox_age = QSpinBox()
+        self.empl_spinbox_age.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.empl_spinbox_age.setRange(18, 200)
+        self.empl_spinbox_salary = QSpinBox()
+        self.empl_spinbox_salary.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.empl_spinbox_salary.setRange(1, 2147483647)
+        self.empl_spinbox_salary.setSuffix(" ₽")
+        self.empl_combobox_duty = QComboBox()
+        self.empl_combobox_duty.addItem('Frontend'); self.empl_combobox_duty.addItem('Backend')
+        self.empl_combobox_duty.addItem('DevOps'); self.empl_combobox_duty.addItem('Teamlead')
+        self.empl_combobox_duty.addItem('HR'); self.empl_combobox_duty.addItem('PM')
+        self.empl_combobox_duty.addItem('CEO')
+        self.empl_lineedit_skills = QLineEdit()
+        self.empl_lineedit_skills.setPlaceholderText("#SQL#Python")
+
+        # добавление полей ввода в макет
+        self.empl_form.addRow("Полное имя:", self.empl_lineedit_fullname)
+        self.empl_form.addRow("Возраст:", self.empl_spinbox_age)
+        self.empl_form.addRow("Зарплата:", self.empl_spinbox_salary)
+        self.empl_form.addRow("Должность:", self.empl_combobox_duty)
+        self.empl_form.addRow("Умения:", self.empl_lineedit_skills)
+
+        self.empl_add_button = QPushButton('Добавить данные')  # кнопка добавления данных
+        # Создание макета всего внутреннего содержимого блока ввода данных (сами поля данных и кнопка)
+        self.empl_layout = QVBoxLayout()
+        self.empl_layout.addLayout(self.empl_form)
+        self.empl_layout.addWidget(self.empl_add_button)
+        self.empl_layout.addStretch()
+
+        # создание и именование блока ввода данных
+        self.empl_box = QGroupBox("Данные нового сотрудника")
+        self.empl_box.setLayout(self.empl_layout)  # установка макета в блок
+
+        self.tab.insertTab(0, self.empl_box, 'Сотрудники')
+
+        # Данная процедура повторяется ещё два раза для создания ещё двух вкладок
+
+        self.task_form = QFormLayout()
+
+        self.task_lineedit_name = QLineEdit();
+        self.task_lineedit_name.setPlaceholderText("Разгром")
+        self.task_lineedit_description = QLineEdit()
+        self.task_spinbox_id_employ = QSpinBox()
+        self.task_spinbox_id_employ.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.task_spinbox_id_employ.setRange(1, 2147483647)
+        self.task_spinbox_id_project = QSpinBox()
+        self.task_spinbox_id_project.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.task_spinbox_id_project.setRange(1, 2147483647)
+        self.task_dateedit_deadline = QDateEdit()
+        self.task_dateedit_deadline.setCalendarPopup(True)
+        self.task_dateedit_deadline.setDisplayFormat('yyyy-MM-dd')
+        self.task_dateedit_deadline.setDate(QDate(2000, 1, 1))
+        self.task_combobox_status = QComboBox()
+        self.task_combobox_status.addItem('Новая');
+        self.task_combobox_status.addItem('В работе')
+        self.task_combobox_status.addItem('Можно проверять');
+        self.task_combobox_status.addItem('Завершена')
+
+        self.task_form.addRow("Название задачи:", self.task_lineedit_name)
+        self.task_form.addRow("Описание задачи:", self.task_lineedit_description)
+        self.task_form.addRow("ID работника:", self.task_spinbox_id_employ)
+        self.task_form.addRow("ID проекта:", self.task_spinbox_id_project)
+        self.task_form.addRow("Дата дедлайна:", self.task_dateedit_deadline)
+        self.task_form.addRow("Статус задачи:", self.task_combobox_status)
+
+        self.task_add_button = QPushButton('Добавить данные')
+
+        self.task_layout = QVBoxLayout()
+        self.task_layout.addLayout(self.task_form)
+        self.task_layout.addWidget(self.task_add_button)
+        self.task_layout.addStretch()
+
+        self.task_box = QGroupBox("Данные новой задачи")
+        self.task_box.setLayout(self.task_layout)
+
+        self.tab.insertTab(1, self.task_box, 'Задачи')
+        # -------------------------------
+        self.projects_form = QFormLayout()
+
+        self.projects_add_button = QPushButton('Добавить данные')
+
+        self.projects_layout = QVBoxLayout()
+        self.projects_layout.addLayout(self.projects_form)
+        self.projects_layout.addWidget(self.projects_add_button)
+        self.projects_layout.addStretch()
+
+        self.projects_box = QGroupBox("Данные нового проекта")
+        self.projects_box.setLayout(self.projects_layout)
+
+        self.tab.insertTab(2, self.projects_box, 'Проекты')
+
+        # Конец создания вкладок
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.tab)
+        self.layout.addStretch()
+
+        self.setLayout(self.layout)
+
 
 # -------------------------------
 # Окно Добавления данных в БД
@@ -430,7 +545,7 @@ class ShowDataBaseWindow(QDialog):
     def __init__(self, engine: Engine, tables: Dict[str, Table]):
         super().__init__()
         self.setWindowTitle('Data Base show')
-        self.resize(900, 600)
+        self.resize(1300, 800)
         self.engine = engine
         self.t = tables
         self.modelEmployee = SATableModel(engine, self.t["employee"], self)
@@ -451,14 +566,46 @@ class ShowDataBaseWindow(QDialog):
 
         # Данная процедура повторяется ещё три раза для создания ещё трёх вкладок
 
-
+        self.task_widget = QWidget()
+        self.task_layout = QHBoxLayout()
         self.task_table = QTableView()
+        self.task_table.setMinimumWidth(700)
         self.task_table.setSortingEnabled(True)
         self.task_table.setModel(self.modelTask)
         self.task_table.setSelectionBehavior(QTableView.SelectRows)
         self.task_table.setSelectionMode(QTableView.SingleSelection)
 
-        tab.insertTab(1, self.task_table, 'Задачи')
+        self.button_select = QPushButton('SELECT')
+        self.button_searchtext = QPushButton('SEARCH')
+        self.button_textedit = QPushButton('TEXTEDIT')
+
+        self.task_oper_layout = QVBoxLayout()
+        self.task_oper_layout.addWidget(self.button_select);
+        self.task_oper_layout.addWidget(self.button_searchtext)
+        self.task_oper_layout.addWidget(self.button_textedit)
+
+        self.task_select_form = QFormLayout()
+        self.task_select_combobox_column = QComboBox()
+        self.task_select_combobox_column.addItem(''); self.task_select_combobox_column.addItem('Какой-то столбец')
+        self.task_where_lineedit = QLineEdit()
+        self.task_orderby_lineedit = QLineEdit()
+        self.task_groupby_lineedit = QLineEdit()
+        self.task_having_lineedit = QLineEdit()
+        self.task_select_button_accept = QPushButton('Принять фильтр')
+
+
+        self.task_select_form.addRow("Столбец:", self.task_select_combobox_column)
+        self.task_select_form.addRow("Вхере:", self.task_where_lineedit)
+        self.task_select_form.addRow("Ордербу:", self.task_orderby_lineedit)
+        self.task_select_form.addRow("Гроупбу:", self.task_groupby_lineedit)
+        self.task_select_form.addRow("Хавинг:", self.task_having_lineedit)
+        self.task_select_form.addWidget(self.task_select_button_accept)
+
+        self.task_oper_layout.addLayout(self.task_select_form)
+        self.task_oper_layout.addStretch()
+        self.task_layout.addWidget(self.task_table); self.task_layout.addLayout(self.task_oper_layout)
+        self.task_widget.setLayout(self.task_layout)
+        tab.insertTab(1, self.task_widget, 'Задачи')
         # -------------------------------
         self.project_table = QTableView()
         self.project_table.setSortingEnabled(True)
@@ -482,7 +629,12 @@ class ShowDataBaseWindow(QDialog):
         # Конец создания вкладок
         # -------------------------------
 
-        layout = QVBoxLayout()
+
+
+
+
+
+        layout = QHBoxLayout()
         layout.addWidget(tab)
         self.setLayout(layout)
 
@@ -544,14 +696,21 @@ class MainWindow(QWidget):
 
         self.button_adddata = QPushButton('Добавить данные')
         self.button_showdb = QPushButton('Вывести данные')
+        self.button_alterdb = QPushButton('Изменить таблицу')
+        self.button_jointable = QPushButton('Мастер соединений')
         self.button_adddata.clicked.connect(self.addData)
         self.button_showdb.clicked.connect(self.showDataBase)
+        self.button_alterdb.clicked.connect(self.alterTables)
         self.button_adddata.setDisabled(True)
         self.button_showdb.setDisabled(True)
+        self.button_alterdb.setDisabled(True)
+        self.button_jointable.setDisabled(True)
 
         self.curdb_grid_buttons = QGridLayout() # сетка-макет кнопок для работы с нынешней бд
         self.curdb_grid_buttons.addWidget(self.button_adddata, 0, 0)
-        self.curdb_grid_buttons.addWidget(self.button_showdb, 1, 0)
+        self.curdb_grid_buttons.addWidget(self.button_showdb, 0, 1)
+        self.curdb_grid_buttons.addWidget(self.button_alterdb, 2, 0, 1, 2)
+        self.curdb_grid_buttons.addWidget(self.button_jointable, 3, 0, 1, 2)
         self.w_layout.addLayout(self.curdb_grid_buttons) # добавление сетки кнопок в общий макет
 
 
@@ -589,6 +748,8 @@ class MainWindow(QWidget):
             self.button_adddata.setDisabled(False)
             self.button_showdb.setDisabled(False)
             self.button_disconn.setDisabled(False)
+            self.button_alterdb.setDisabled(False)
+            self.button_jointable.setDisabled(False)
         except SQLAlchemyError as e:
             pass
             makeLog(f"Ошибка подключения: {e}")
@@ -607,6 +768,8 @@ class MainWindow(QWidget):
         self.button_adddata.setDisabled(True)
         self.button_showdb.setDisabled(True)
         self.button_disconn.setDisabled(True)
+        self.button_alterdb.setDisabled(True)
+        self.button_jointable.setDisabled(True)
         makeLog("Соединение закрыто.")
 
     def reset_db(self):
@@ -628,6 +791,10 @@ class MainWindow(QWidget):
 
     def showDataBase(self):
         dlg = ShowDataBaseWindow(self.engine, self.tables)
+        dlg.exec()
+
+    def alterTables(self):
+        dlg = AlterTableWindow(self.engine, self.tables)
         dlg.exec()
 
 

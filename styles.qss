@@ -30,7 +30,7 @@ QTabWidget#show::tab-bar {
 }
 QTabWidget#show::pane {
     position: absolute;
-    top: -0.1em;
+    top: -0.7em;
 }
 
 
